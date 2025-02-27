@@ -18,7 +18,6 @@ services:
       - ./src:/var/www/html:delegated
     depends_on:
       - php
-      - redis
       - mysql
       - mailhog
     networks:
@@ -63,13 +62,6 @@ services:
       - "9000:9000"
     volumes:
       - ./src:/var/www/html:delegated
-    networks:
-      - laravel
-
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
     networks:
       - laravel
 
