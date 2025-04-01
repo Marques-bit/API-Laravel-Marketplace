@@ -2,23 +2,32 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use Illuminate\Auth\Events\Validate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
     public function register(Request $request)
     {
-        $request->validate([
+        $validateData = $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6|string',
             'password_confirm' => 'required|string'
+            
         ]);
-
         if ($request->password != $request->password_confirm){
             return response()->json(['message' => 'Inconrrect Password!']);
         }
+        $validateData['password'] = Hash::make($validateData['password']);
+        $user = User::create($validateData);
+            return response()->json([
+                'message' => 'Registration Successful',
+                'user' => $user
+        ], 201);
         
     }
     
