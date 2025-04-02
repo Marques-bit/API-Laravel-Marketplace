@@ -17,7 +17,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6|string',
             'password_confirm' => 'required|string'
-            
+
         ]);
         if ($request->password != $request->password_confirm){
             return response()->json(['message' => 'Inconrrect Password!']);
@@ -26,11 +26,11 @@ class UserController extends Controller
         $user = User::create($validateData);
             return response()->json([
                 'message' => 'Registration Successful',
-                'user' => $user
+                'token' => $token
         ], 201);
-        
+
     }
-    
+
     public function authenticate(Request $request)
     {
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
@@ -46,10 +46,28 @@ class UserController extends Controller
 
     }
 
+<<<<<<< HEAD
     public function User(Request $request)
     {
         
+=======
+    public function destroy(Request $request)
+    {
+        $user = User::find($request->id);
+        if (!$user) {
+           return response()->json(['message' => 'User not found'], 404);
+        }
+
+        if (!auth()->user()->can('delete', $user)) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $user->delete();
+        return response()->json(['message' => 'User deleted successfully'], 200);
+>>>>>>> fd2e168 (delete)
     }
+        //
+
 
     /**
      * Display the specified resource.
@@ -78,8 +96,8 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
+    //public function destroy(string $id)
+    //{
         //
-    }
+    //}
 }
