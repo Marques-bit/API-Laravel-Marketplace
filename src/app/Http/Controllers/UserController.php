@@ -34,17 +34,21 @@ class UserController extends Controller
     public function authenticate(Request $request)
     {
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-            return response()->json(['message' => 'Login Successful'], 200);
+            $user = $request->user();
+
+            $token = $user->createToken('Personal Access Token');
+            return response()->json([
+                'message' => 'Login Successful',
+                'token' => $token
+            ], 200);
         }
         return response()->json(['message' => 'Invalid Credentials'], 401);
 
     }
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+
+    public function User(Request $request)
     {
-        //
+        
     }
 
     /**
