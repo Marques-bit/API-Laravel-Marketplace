@@ -46,11 +46,6 @@ class UserController extends Controller
 
     }
 
-<<<<<<< HEAD
-    public function User(Request $request)
-    {
-        
-=======
     public function destroy(Request $request)
     {
         $user = User::find($request->id);
@@ -64,7 +59,6 @@ class UserController extends Controller
 
         $user->delete();
         return response()->json(['message' => 'User deleted successfully'], 200);
->>>>>>> fd2e168 (delete)
     }
         //
 
