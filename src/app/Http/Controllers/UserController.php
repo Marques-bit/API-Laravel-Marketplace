@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Auth\Events\Validate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -19,14 +18,16 @@ class UserController extends Controller
             'password_confirm' => 'required|string'
 
         ]);
+
         if ($request->password != $request->password_confirm){
             return response()->json(['message' => 'Inconrrect Password!']);
         }
+
         $validateData['password'] = Hash::make($validateData['password']);
+
         $user = User::create($validateData);
-            return response()->json([
+        return response()->json([
                 'message' => 'Registration Successful',
-                'token' => $token
         ], 201);
 
     }
@@ -46,30 +47,47 @@ class UserController extends Controller
 
     }
 
-    public function destroy(Request $request)
+    public function update(Request $request,$id)
     {
-        $user = User::find($request->id);
+        $request -> validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6|string',
+            'password_confirm' => 'required|string'
+        ]);
+
+        $user = User::find($id);
+
+        $user->name = $request->input('name');
+        $user->email = $request->input('email');
+        $user->password = Hash::make($request->input('password'));
+
+        if ($request->input('password') != $request->input('password_confirm')) {
+            return response()->json(['message' => 'Incorrect Password'], 400);
+        }
+
+        if ($user->update($request->all())) {
+            return response()->json(['message' => 'User updated successfully'], 200);
+        }
+    }
+
+    public function deleteUser()
+    {
+        $user = User::findorFail(Auth::id());
+
+        $user=Auth::user();
+
         if (!$user) {
            return response()->json(['message' => 'User not found'], 404);
         }
 
-        if (!auth()->user()->can('delete', $user)) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
         $user->delete();
+
         return response()->json(['message' => 'User deleted successfully'], 200);
     }
-        //
+   
 
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+    
 
     /**
      * Show the form for editing the specified resource.
@@ -78,18 +96,7 @@ class UserController extends Controller
     {
         //
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
+    
     //public function destroy(string $id)
     //{
         //

@@ -14,9 +14,14 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-Route::delete('/user/{id}', [UserController::class, 'destroy']);
+Route::middleware('auth:sanctum')->group( function () {
+    Route::delete('/user', [UserController::class, 'deleteUser']);
+
+});
+
+
+
+Route::put('/userUpdate', [UserController::class, 'update']);
 Route::post('/login', [UserController::class, 'authenticate']);
 Route::post('/register', [UserController::class, 'register']);
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+
