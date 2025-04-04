@@ -47,10 +47,10 @@ class UserController extends Controller
 
     }
 
-    public function update(Request $request,$id)
+    public function update(Request $request)
     {
-        $user = User::findOrFail($id);
-
+        $user = Auth::user();
+        
         $validateData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,'.$user->id,
@@ -58,15 +58,15 @@ class UserController extends Controller
         ]);
 
         if ($request->has('name')) {
-            $user->name = $validatedData['name'];
+            $user->name = $validateData['name'];
         }
 
         if ($request->has('email')) {
-            $user->email = $validatedData['email'];
+            $user->email = $validateData['email'];
         }
 
         if ($request->has('password')) {
-            $user->password = Hash::make($validatedData['password']);
+            $user->password = Hash::make($validateData['password']);
         }
 
         $user->save();

@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 Route::middleware('auth:sanctum')->group( function () {
-    Route::delete('/user', [UserController::class, 'deleteUser']);
+    Route::delete('/userDelete', [UserController::class, 'deleteUser']);
     Route::put('/userUpdate', [UserController::class, 'update']);
 });
 
