@@ -16,12 +16,11 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware('auth:sanctum')->group( function () {
     Route::delete('/user', [UserController::class, 'deleteUser']);
-
+    Route::put('/userUpdate', [UserController::class, 'update']);
 });
 
 
 
-Route::put('/userUpdate', [UserController::class, 'update']);
 Route::post('/login', [UserController::class, 'authenticate']);
 Route::post('/register', [UserController::class, 'register']);
 
