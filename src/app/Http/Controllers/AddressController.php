@@ -13,39 +13,36 @@ class AddressController extends Controller
 
     public function createAddress(Request $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|integer',
-            'street' => 'required|string',
-            'number' => 'required|integer',
-            'complement' => 'required|string',
-            'neighborhood' => 'required|string',
-            'city' => 'required|string',
-            'state' => 'required|string',
-            'country' => 'required|string',
-        ]);
-        
-        $user = User::FindOrFail($request->user_id);
-        if (! $user) {
-            return response()->json(['message' => 'User not found'], 404);
-            }
+        try {
+            $validated = $request->validate([
+                'user_id' => 'required|integer',
+                'street' => 'required|string',
+                'number' => 'required|integer',
+                'complement' => 'required|string',
+                'neighborhood' => 'required|string',
+                'city' => 'required|string',
+                'state' => 'required|string',
+                'country' => 'required|string',
+            ]);
 
-        if ($validated['user_id'] != Auth::id()) {
-            return response()->json(['message' => 'User not permicioned'], 401);
+            $validated['user_id'] = Auth::id();
+
+            $address = Address::create($validated);
+
+            return response()->json([
+                'message' => 'Address created successfully',
+                'address' => $address
+            ], 201);
+
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Failed to create address',
+        'error' => env('APP_DEBUG') ? $e->getMessage() : null], 500);
         }
-        
-
-        $address = Address::create($validated);
-
-        return response()->json([
-            'message' => 'Address created successfully',
-            'address' => $address
-        ], 201);
     }
 
     public function addressUpdate(Request $request,$id)
     {
-            $user = Auth::id();
-
+        try {
             $validated = $request->validate([
                 'user_id' => 'required|integer',
                 'street' => 'sometimes|required|string',
@@ -57,53 +54,42 @@ class AddressController extends Controller
                 'country' => 'sometimes|required|string',
             ]);
 
-            if ($validated['user_id'] != Auth::id()) {
-                return response()->json(['message' => 'User not permicioned'], 401);
+            $address = Address::findOrFail($id);
+
+            if ($address->user_id != Auth::id()) {
+                return response()->json(['message' =>
+                'You are not authorized to perform this action'], 401);
             }
+
+            $address->update($validated);
 
             return response()->json([
                 'message' => 'Address updated successfully',
-                'address' => $address,
+                'address' => $address
             ], 200);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Failed to update address',
+        'error' => env('APP_DEBUG') ? $e->getMessage() : null], 500);
+        }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function addressDelete(Request $request,$id)
     {
-        //
+        try {
+            $address = Address::findOrFail($id);
+
+            if ($address->user_id != Auth::id()) {
+                return response()->json(['message' =>
+                'Unauthorized to perform this action'], 401);
+            }
+
+            $address->delete();
+
+            return response()->json(['message' => 'Address deleted successfully'], 204);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Failed to delete address',
+        'error' => env('APP_DEBUG') ? $e->getMessage() : null], 500);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
 }
