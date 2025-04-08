@@ -15,7 +15,6 @@ class AddressController extends Controller
     {
         try {
             $validated = $request->validate([
-                'user_id' => 'required|integer',
                 'street' => 'required|string',
                 'number' => 'required|integer',
                 'complement' => 'required|string',
@@ -44,7 +43,6 @@ class AddressController extends Controller
     {
         try {
             $validated = $request->validate([
-                'user_id' => 'required|integer',
                 'street' => 'sometimes|required|string',
                 'number' => 'sometimes|required|integer',
                 'complement' => 'sometimes|required|string',
@@ -85,7 +83,7 @@ class AddressController extends Controller
 
             $address->delete();
 
-            return response()->json(['message' => 'Address deleted successfully'], 204);
+            return response()->json(['message' => 'Address deleted successfully'], 200);
     } catch (\Exception $e) {
         return response()->json(['message' => 'Failed to delete address',
         'error' => env('APP_DEBUG') ? $e->getMessage() : null], 500);

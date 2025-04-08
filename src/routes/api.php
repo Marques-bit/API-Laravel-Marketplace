@@ -19,7 +19,7 @@ Route::middleware('auth:sanctum')->group( function () {
     Route::delete('/userDelete', [UserController::class, 'deleteUser']);
     Route::delete('/addressDelete/{id}', [AddressController::class, 'addressDelete']);
     Route::put('/userUpdate/{id}', [UserController::class, 'update']);
-    Route::put('/addressUpdate', [AddressController::class, 'addressUpdate']);
+    Route::put('/updatedAddress/{id}', [AddressController::class, 'addressUpdate']);
 });
 
 Route::post('/userAddress', [AddressController::class, 'createAddress']);
