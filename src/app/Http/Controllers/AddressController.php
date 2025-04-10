@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Auth;
 
 class AddressController extends Controller
 {
-
     public function createAddress(Request $request)
     {
         try {
@@ -90,4 +89,23 @@ class AddressController extends Controller
         }
     }
 
+    public function getAddress(Request $request,$id)
+    {
+        try {
+            $address = Address::findOrFail($id);
+
+            if ($address->user_id != Auth::id()) {
+                return response()->json(['message' =>
+                'You are not authorized to perform this action'], 401);
+            }
+
+            return response()->json([
+                'message' => 'Address retrieved successfully',
+                'address' => $address
+            ], 200);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Address not found or inaccessible',
+        'error' => env('APP_DEBUG') ? $e->getMessage() : null], 500);
+        }
+    }
 }

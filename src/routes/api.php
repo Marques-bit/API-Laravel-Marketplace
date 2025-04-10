@@ -20,9 +20,10 @@ Route::middleware('auth:sanctum')->group( function () {
     Route::delete('/addressDelete/{id}', [AddressController::class, 'addressDelete']);
     Route::put('/userUpdate/{id}', [UserController::class, 'update']);
     Route::put('/updatedAddress/{id}', [AddressController::class, 'addressUpdate']);
+    Route::post('/userAddress', [AddressController::class, 'createAddress']);
 });
 
-Route::post('/userAddress', [AddressController::class, 'createAddress']);
+Route::get('/addressUser/{id}', [AddressController::class, 'getAddress']);
 Route::post('/login', [UserController::class, 'authenticate']);
 Route::post('/register', [UserController::class, 'register']);
 

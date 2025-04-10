@@ -22,4 +22,9 @@ class User extends Authenticatable
         'password',
         'role',
     ];
+
+    public function address()
+    {
+        return $this->hasMany(Address::class);
+    }
 }
