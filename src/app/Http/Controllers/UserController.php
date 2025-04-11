@@ -15,7 +15,7 @@ class UserController extends Controller
             'name' => 'required',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6|string',
-            'password_confirm' => 'required|string'
+            'password_confirm' => 'required|string',
 
         ]);
 
@@ -24,7 +24,7 @@ class UserController extends Controller
         }
 
         $validateData['password'] = Hash::make($validateData['password']);
-
+        $validateData['role'] = 'client';
         $user = User::create($validateData);
         return response()->json([
                 'message' => 'Registration Successful',
@@ -36,11 +36,17 @@ class UserController extends Controller
     {
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $user = $request->user();
+            $token = $user->createToken('Personal Access Token')->plainTextToken;
 
-            $token = $user->createToken('Personal Access Token');
             return response()->json([
                 'message' => 'Login Successful',
-                'token' => $token
+                'token' => $token,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                ]
             ], 200);
         }
         return response()->json(['message' => 'Invalid Credentials'], 401);
@@ -50,13 +56,17 @@ class UserController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
-        
+
         $validateData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,'.$user->id,
             'password' => 'sometimes|required|min:6|string|confirmed',
+            'role' => 'sometimes|string|in:admin,user',
         ]);
 
+        if ($request->has('role') && $user->role !== 'admin') {
+            $user->role = $validateData['role'];
+        }
         if ($request->has('name')) {
             $user->name = $validateData['name'];
         }

@@ -11,8 +11,8 @@ class CategoryController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (Auth::user()->role != 'admin') {
-                return response()->json(['message' => 'Unauthorized'], 401);
+            if (!auth()->check()||Auth::user()->role !== 'admin') {
+                return response()->json(['message' => 'Unauthorized'], 403);
             }
             return $next($request);
         })->except(['allCategories']);
@@ -26,12 +26,14 @@ class CategoryController extends Controller
 
     public function createCategory(Request $request)
     {
+        // if (Auth::user()->role != 'admin') {
+        //     return response()->json(['message' => 'Unauthorized'], 401);
+        // }
         $request->validate([
             'name' => 'required|string|max:255|unique:categories',
             'description' => 'sometimes|string|max:255',
         ]);
-
-        $category = Category::create(['name' => $request->name]);
+        $category = Category::create($request->all());
         return response()->json($category, 201);
     }
 
