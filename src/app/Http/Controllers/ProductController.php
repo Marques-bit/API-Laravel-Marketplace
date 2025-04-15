@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function createProduct(Request $request)
     {
-        //
+        if (Auth::user()->role != 'admin'|'moderator') {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
     }
 
     /**

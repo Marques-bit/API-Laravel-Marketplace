@@ -20,14 +20,18 @@ class UserController extends Controller
         ]);
 
         if ($request->password != $request->password_confirm){
-            return response()->json(['message' => 'Inconrrect Password!']);
+            return response()->json(['message' => 'Inconrrect Password!'],400);
         }
 
-        $validateData['password'] = Hash::make($validateData['password']);
-        $validateData['role'] = 'client';
-        $user = User::create($validateData);
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
         return response()->json([
-                'message' => 'Registration Successful',
+            'message' => 'Registration Successful',
+            'user' => $user
         ], 201);
 
     }
@@ -45,7 +49,6 @@ class UserController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'role' => $user->role,
                 ]
             ], 200);
         }
@@ -61,12 +64,8 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,'.$user->id,
             'password' => 'sometimes|required|min:6|string|confirmed',
-            'role' => 'sometimes|string|in:admin,user',
         ]);
 
-        if ($request->has('role') && $user->role !== 'admin') {
-            $user->role = $validateData['role'];
-        }
         if ($request->has('name')) {
             $user->name = $validateData['name'];
         }

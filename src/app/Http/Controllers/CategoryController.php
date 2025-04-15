@@ -26,9 +26,9 @@ class CategoryController extends Controller
 
     public function createCategory(Request $request)
     {
-        // if (Auth::user()->role != 'admin') {
-        //     return response()->json(['message' => 'Unauthorized'], 401);
-        // }
+         if (Auth::user()->role != 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
         $request->validate([
             'name' => 'required|string|max:255|unique:categories',
             'description' => 'sometimes|string|max:255',
