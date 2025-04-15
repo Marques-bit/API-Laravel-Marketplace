@@ -12,11 +12,17 @@ class ProductController extends Controller
         if (Auth::user()->role != 'admin'|'moderator') {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
+        $request->validate([
+            'name' => 'required|string|max:255|unique:products',
+            'description' => 'sometimes|string|max:255',
+            'price' => 'required|numeric',
+            'image' => 'required|image|max:1024',
+            'category_id' => 'required|numeric',
+            'discount_id' => 'sometimes|numeric',
+            'quantity' => 'required|numeric',
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         //
