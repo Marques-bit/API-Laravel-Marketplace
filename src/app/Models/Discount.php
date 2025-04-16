@@ -10,7 +10,9 @@ class Discount extends Model
     use HasFactory;
 
     protected $fillable = [
-        'code',
+        'product_id',
+        'start_date',
+        'end_date',
         'discount',
     ];
 }

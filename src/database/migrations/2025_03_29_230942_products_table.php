@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->integer('stock');
             $table->text('description')->nullable();
             $table->decimal('price', 10, 2);
             $table->enum('category_id', ['books', 'clothes', 'electronics', 'food', 'household', 'tools'])->default('books');
+            $table->integer('stock');
             $table->timestamps();
         });
     }

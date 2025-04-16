@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,33 +25,30 @@ class ProductController extends Controller
     }
 
     public function createProduct(Request $request)
-    {
+    {   
         $validateData = $request->validate([
             'name'        => 'required|string|max:255|unique:products',
             'description' => 'sometimes|string|max:255',
-            'price'      => 'required|decimal:10,2',
-            'image'       => 'required|image|max:1024',
+            'price'      => 'required|numeric',
+            //'image'       => 'required|image|max:1024',
             'category_id' => 'required|numeric',
-            'discount_id' => 'sometimes|numeric',
-            'quantity'    => 'required|numeric',
+            'stock'       => 'sometimes|integer',
         ]);
 
         $product = Product::create($validateData);
 
         return response()->json(['message' => 'Product created successfully', 'product' => $product], 201);
-
     }
 
     public function updateProduct(Request $request, $id)
     {
-        $request->validate([
+        $validateData = $request->validate([
             'name'        => 'required|string|max:255|unique:products',
             'description' => 'sometimes|string|max:255',
             'price'      => 'required|decimal:10,2',
-            'image'       => 'required|image|max:1024',
+            //'image'       => 'required|image|max:1024',
             'category_id' => 'required|numeric',
-            'discount_id' => 'sometimes|numeric',
-            'quantity'    => 'required|numeric',
+            'stock'       => 'sometimes|integer',   
         ]);
 
         $product = Product::findOrFail($id);
