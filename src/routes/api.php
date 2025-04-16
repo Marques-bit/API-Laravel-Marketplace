@@ -17,6 +17,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 Route::middleware('auth:sanctum')->group( function () {
+    Route::post('/productCreate', [ProductController::class, 'createProduct']);
+    Route::put('/productUpdate/{id}', [ProductController::class, 'updateProduct']);
+    Route::delete('/productDelete/{id}', [ProductController::class, 'deleteProduct']);
+    Route::get('/productAll', [ProductController::class, 'allProducts']);
+    Route::get('/product/{id}', [ProductController::class, 'getProduct']);
     Route::delete('/categoryDelete/{id}', [CategoryController::class, 'deleteCategory']);
     Route::get('/allCategories', [CategoryController::class, 'allCategories']);
     Route::get('/category/{id}', [CategoryController::class, 'getCategory']);

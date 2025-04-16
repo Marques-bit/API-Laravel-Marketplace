@@ -11,7 +11,7 @@ class CategoryController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (!auth()->check()||Auth::user()->role !== 'admin') {
+            if (!auth()->check() || Auth::user()->role !== 'admin') {
                 return response()->json(['message' => 'Unauthorized'], 403);
             }
             return $next($request);
@@ -26,28 +26,28 @@ class CategoryController extends Controller
 
     public function createCategory(Request $request)
     {
-         if (Auth::user()->role != 'admin') {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-        $request->validate([
+
+        $validateData = $request->validate([
             'name' => 'required|string|max:255|unique:categories',
             'description' => 'sometimes|string|max:255',
         ]);
-        $category = Category::create($request->all());
-        return response()->json($category, 201);
+
+        $category = Category::create($validateData);
+
+        return response()->json(['message' => 'Category created successfully', 'category' => $category], 200);
     }
 
     public function updateCategory(Request $request, $id)
     {
-        $request->validate([
+        $validateData = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,' . $id,
             'description' => 'sometimes|string|max:255',
         ]);
 
         $category = Category::findOrFail($id);
-        $category->update(['name' => $request->name]);
+        $category->update($validateData);
 
-        return response()->json($category);
+        return response()->json(['message' => 'Category updated successfully', 'category' => $category], 200);
     }
 
     public function deleteCategory($id)
@@ -55,7 +55,7 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
         $category->delete();
 
-        return response()->json(['message' => 'Category deleted successfully']);
+        return response()->json(['message' => 'Category deleted successfully'], 200);
     }
 
     public function getCategory($id)

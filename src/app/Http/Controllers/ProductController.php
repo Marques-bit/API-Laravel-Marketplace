@@ -7,64 +7,69 @@ use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (!auth()->check()||Auth::user()->role !== 'admin' && Auth::user()->role !== 'moderator') {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+            return $next($request);
+        })->except(['allProducts']);
+    }
+
+    public function allProducts()
+    {
+        $products = Product::all();
+        return response()->json($products);
+    }
+
     public function createProduct(Request $request)
     {
-        if (Auth::user()->role != 'admin'|'moderator') {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-        $request->validate([
-            'name' => 'required|string|max:255|unique:products',
+        $validateData = $request->validate([
+            'name'        => 'required|string|max:255|unique:products',
             'description' => 'sometimes|string|max:255',
-            'price' => 'required|numeric',
-            'image' => 'required|image|max:1024',
+            'price'      => 'required|decimal:10,2',
+            'image'       => 'required|image|max:1024',
             'category_id' => 'required|numeric',
             'discount_id' => 'sometimes|numeric',
-            'quantity' => 'required|numeric',
+            'quantity'    => 'required|numeric',
         ]);
+
+        $product = Product::create($validateData);
+
+        return response()->json(['message' => 'Product created successfully', 'product' => $product], 201);
+
     }
 
-    public function create()
+    public function updateProduct(Request $request, $id)
     {
-        //
+        $request->validate([
+            'name'        => 'required|string|max:255|unique:products',
+            'description' => 'sometimes|string|max:255',
+            'price'      => 'required|decimal:10,2',
+            'image'       => 'required|image|max:1024',
+            'category_id' => 'required|numeric',
+            'discount_id' => 'sometimes|numeric',
+            'quantity'    => 'required|numeric',
+        ]);
+
+        $product = Product::findOrFail($id);
+        $product->update($validateData);
+
+        return response()->json(['message' => 'Product updated successfully', 'product' => $product], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function deleteProduct($id)
     {
-        //
+        $product = Product::findOrFail($id);
+        $product->delete();
+
+        return response()->json(['message' => 'Product deleted successfully'], 200);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function getProduct($id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $product = Product::findOrFail($id);
+        return response()->json(['message' => 'Product retrieved successfully', 'product' => $product], 200);
     }
 }
