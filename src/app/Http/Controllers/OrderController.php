@@ -6,59 +6,60 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+
+    public function __construct()
     {
-        //
+        $this->middleware(function ($request, $next) {
+            if (!auth()->check()||Auth::user()->role !== 'admin' && Auth::user()->role !== 'moderator') {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+            return $next($request);
+        })->except(['allOrders']);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function createOrder(Request $request)
     {
-        //
+        $validateData = $request->validate([
+            'user_id' => 'required|numeric',
+            'product_id' => 'required|numeric',
+            'quantity' => 'required|numeric',
+            'price' => 'required|numeric',
+            'status' => 'required|string|max:255',
+        ]);
+
+        $order = Order::create($validateData);
+
+        return response()->json(['message' => 'Order created successfully', 'order' => $order], 201);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function updateOrder(Request $request, $id)
     {
-        //
+        $validateData = $request->validate([
+            'user_id' => 'required|numeric',
+            'product_id' => 'required|numeric',
+            'quantity' => 'required|numeric',
+            'price' => 'required|numeric',
+            'status' => 'required|string|max:255',
+        ]);
+
+        $order = Order::findOrFail($id);
+        $order->update($validateData);
+
+        return response()->json(['message' => 'Order updated successfully', 'order' => $order], 200);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function deleteOrder($id)
     {
-        //
+        $order = Order::findOrFail($id);
+        $order->delete();
+
+        return response()->json(['message' => 'Order deleted successfully'], 200);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function getOrder($id)
     {
-        //
+        $order = Order::findOrFail($id);
+        return response()->json(['message' => 'Order retrieved successfully', 'order' => $order], 200);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
 }
