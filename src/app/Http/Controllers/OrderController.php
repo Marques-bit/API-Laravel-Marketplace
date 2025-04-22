@@ -7,60 +7,79 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (!auth()->check()||Auth::user()->role !== 'admin' && Auth::user()->role !== 'moderator') {
-                return response()->json(['message' => 'Unauthorized'], 403);
+            if (!auth()->check()) {
+                return response()->json(['message' => 'Unauthorized - Please login'], 401);
             }
+
+            $user = Auth::user();
+
+            if (!in_array($user->role, ['user', 'admin', 'moderator'])) {
+                return response()->json(['message' => 'Forbidden - Insufficient privileges'], 403);
+            }
+
             return $next($request);
-        })->except(['allOrders']);
+        });
+
     }
 
     public function createOrder(Request $request)
-    {
-        $validateData = $request->validate([
-            'user_id' => 'required|numeric',
-            'product_id' => 'required|numeric',
-            'quantity' => 'required|numeric',
-            'price' => 'required|numeric',
-            'status' => 'required|string|max:255',
-        ]);
+{
+    $validated = $request->validate([
+        'address_id' => 'required|exists:addresses,id',
+        'coupon_id' => 'nullable|exists:coupons,id',
+        'items' => 'required|array|min:1',
+        'items.*.product_id' => 'required|exists:products,id',
+        'items.*.quantity' => 'required|integer|min:1'
+    ]);
 
-        $order = Order::create($validateData);
+    $user = auth()->user();
 
-        return response()->json(['message' => 'Order created successfully', 'order' => $order], 201);
+    $totalAmount = 0;
+    $orderItems = [];
+
+    foreach ($validated['items'] as $item) {
+        $product = Product::findOrFail($item['product_id']);
+        $subtotal = $product->price * $item['quantity'];
+        $totalAmount += $subtotal;
+
+        $orderItems[] = [
+            'product_id' => $product->id,
+            'quantity' => $item['quantity'],
+            'unit_price' => $product->price,
+            'subtotal' => $subtotal
+        ];
     }
 
-    public function updateOrder(Request $request, $id)
-    {
-        $validateData = $request->validate([
-            'user_id' => 'required|numeric',
-            'product_id' => 'required|numeric',
-            'quantity' => 'required|numeric',
-            'price' => 'required|numeric',
-            'status' => 'required|string|max:255',
-        ]);
-
-        $order = Order::findOrFail($id);
-        $order->update($validateData);
-
-        return response()->json(['message' => 'Order updated successfully', 'order' => $order], 200);
+    if (!empty($validated['coupon_id'])) {
+        $coupon = Coupon::findOrFail($validated['coupon_id']);
+        $totalAmount = $coupon->applyDiscount($totalAmount);
     }
 
-    public function deleteOrder($id)
+    $order = $user->orders()->create([
+        'user_id' => $user->id,
+        'address_id' => $validated['address_id'],
+        'order_date' => now(),
+        'coupon_id' => $validated['coupon_id'] ?? null,
+        'status' => 'pending',
+        'totalAmount' => $totalAmount
+    ]);
+
+    $order->items()->createMany($orderItems);
+
+    return response()->json([
+        'message' => 'Order created successfully',
+        'order' => $order->load(['items.product', 'address', 'coupon'])
+    ], 201);
+}
+
+    public function orderDelete($id)
     {
         $order = Order::findOrFail($id);
         $order->delete();
 
         return response()->json(['message' => 'Order deleted successfully'], 200);
     }
-
-    public function getOrder($id)
-    {
-        $order = Order::findOrFail($id);
-        return response()->json(['message' => 'Order retrieved successfully', 'order' => $order], 200);
-    }
-
 }
