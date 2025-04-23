@@ -9,72 +9,35 @@ use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
-    public function cartUser(Request $request)
+    public function getCart(Request $request)
     {
-        $user = User::findOrFail($request->user()->id);
-        $cart = $user->cart;
-        return response()->json(['message' => 'Cart retrieved successfully', 'cart' => $cart], 200);
+    $user = $request->user();
+    $user->load('cart.items');
+
+    if (!$user->cart) {
+        return response()->json(['message' => 'Cart is empty'
+    ], 200);
     }
 
-    public function addToCart(Request $request)
-    {
-        $user = User::findOrFail($request->user()->id);
-        $product = Product::findOrFail($request->product_id);
-        $cart = $user->cart;        
-        $cartItem = $cart->cartItems()->where('product_id', $product->id)->first();
-        if ($cartItem) {
-            $cartItem->quantity += $request->quantity;
-            $cartItem->save();
-        } else {
-            $cartItem = new CartItem([
-                'cart_id' => $cart->id,
-                'product_id' => $product->id,
-                'quantity' => $request->quantity,
-                'total_price' => $product->price * $request->quantity,
-            ]);
-            $cartItem->save();
-        }
-        return response()->json(['message' => 'Product added to cart successfully', 'cartItem' => $cartItem], 201);
+    return new CartResource($user->cart);
     }
 
-    public function updateQuantity(Request $request)
+    public function deleteCart(Request $request)
     {
-        $user = User::findOrFail($request->user()->id);
-        $product = Product::findOrFail($request->product_id);
-        $cart = $user->cart;
-        $cartItem = $cart->cartItems()->where('product_id', $product->id)->first();
-        if ($cartItem) {
-            $cartItem->quantity = $request->quantity;
-            $cartItem->save();
-        }
-        return response()->json(['message' => 'Quantity updated successfully'], 200);
+    $user = $request->user();
+
+    if (!$user->cart) {
+        return response()->json([
+            'message' => 'Cart not found'
+        ], 404);
     }
 
-    public function removeItemFromCart(Request $request)
-    {
-        $user = User::findOrFail($request->user()->id);
-        $product = Product::findOrFail($request->product_id);
-        $cart = $user->cart;
-        $cartItem = $cart->cartItems()->where('product_id', $product->id)->first();
-        if ($cartItem) {
-            $cartItem->quantity -= $request->quantity;
-            $cartItem->save();
-            if ($cartItem->quantity <= 0) {
-                $cartItem->delete();
-            }
-        }
-        return response()->json(['message' => 'Product removed from cart successfully'], 200);
-    }
+    $this->authorize('delete', $user->cart);
+    $user->cart()->delete();
 
-    public function removeAllItemsFromCart(Request $request)
-    {
-        $user = User::findOrFail($request->user()->id);
-        $cart = $user->cart;
-        $cartItems = $cart->cartItems;
-        foreach ($cartItems as $cartItem) {
-            $cartItem->delete();
-        }
-        return response()->json(['message' => 'All items removed from cart successfully'], 200);
+    return response()->json([
+        'message' => 'Cart deleted successfully'
+    ], 204);
     }
 
 }
