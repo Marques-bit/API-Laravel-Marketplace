@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cart;
+use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class CartItemController extends Controller
 {
-    protected function getAuthenticatedUser()
-    {
-        return $request->user();
-    }
-
     protected function getUserCart(User $user)
     {
         return $user->cart()->firstOrFail();
@@ -21,89 +19,44 @@ class CartItemController extends Controller
         return $cart->cartItems()->where('product_id', $productId)->first();
     }
 
-    public function addToCart(Request $request)
+    public function addItemToCart(Request $request)
     {
-        $request->validate([
+        $user = $request->user();
+        $cart = $user->cart()->firstOrCreate();
+        
+        $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1'
         ]);
 
-        $user = $this->getAuthenticatedUser();
-        $cart = $this->getUserCart($user);
-        $product = Product::findOrFail($request->product_id);
-
-        $cartItem = $this->getCartItem($cart, $product->id);
-
-        if ($cartItem) {
-            $cartItem->increment('quantity', $request->quantity);
-            $cartItem->total_price = $product->price * $cartItem->quantity;
-            $cartItem->save();
-        } else {
-            $cartItem = $cart->cartItems()->create([
-                'product_id' => $product->id,
-                'quantity' => $request->quantity,
-                'total_price' => $product->price * $request->quantity,
-            ]);
-        }
-
-        return response()->json([
-            'message' => 'Product added to cart successfully',
-            'cartItem' => $cartItem
-        ], 201);
-    }
-
-    public function updateQuantity(Request $request)
-    {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1'
-        ]);
-
-        $user = $this->getAuthenticatedUser();
-        $cart = $this->getUserCart($user);
-        $cartItem = $this->getCartItem($cart, $request->product_id);
-
-        if (!$cartItem) {
-            return response()->json(['message' => 'Item not found in cart'], 404);
-        }
-
-        $cartItem->update([
-            'quantity' => $request->quantity,
-            'total_price' => $cartItem->product->price * $request->quantity
+        $cart->items()->create([
+            'product_id' => $validated['product_id'],
+            'quantity' => $validated['quantity'],
+            'unit_price' => Product::find($validated['product_id'])->price
         ]);
 
         return response()->json([
-            'message' => 'Quantity updated successfully',
-            'cartItem' => $cartItem
+            'message' => 'Item added to cart successfully'
         ]);
     }
 
     public function removeItemFromCart(Request $request)
     {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1'
-        ]);
-
         $user = $this->getAuthenticatedUser();
         $cart = $this->getUserCart($user);
-        $cartItem = $this->getCartItem($cart, $request->product_id);
+        $product = $request->product;
+        $quantity = $request->quantity;
 
-        if (!$cartItem) {
-            return response()->json(['message' => 'Item not found in cart'], 404);
-        }
+        $cartItem = $this->getCartItem($cart, $product->id);
 
-        if ($cartItem->quantity <= $request->quantity) {
-            $cartItem->delete();
-            $message = 'Product removed from cart completely';
-        } else {
-            $cartItem->decrement('quantity', $request->quantity);
-            $cartItem->total_price = $cartItem->product->price * $cartItem->quantity;
+        if ($cartItem) {
+            $cartItem->quantity -= $quantity;
             $cartItem->save();
-            $message = 'Product quantity reduced successfully';
-        }
 
-        return response()->json(['message' => $message]);
+            return response()->json([
+                'message' => 'Item removed from cart successfully'
+            ]);
+        }
     }
 
     public function removeAllItemsFromCart(Request $request)

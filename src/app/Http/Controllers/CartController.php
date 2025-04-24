@@ -16,28 +16,30 @@ class CartController extends Controller
 
     if (!$user->cart) {
         return response()->json(['message' => 'Cart is empty'
-    ], 200);
+        ], 200);
     }
-
-    return new CartResource($user->cart);
-    }
-
-    public function deleteCart(Request $request)
-    {
-    $user = $request->user();
-
-    if (!$user->cart) {
-        return response()->json([
-            'message' => 'Cart not found'
-        ], 404);
-    }
-
-    $this->authorize('delete', $user->cart);
-    $user->cart()->delete();
 
     return response()->json([
-        'message' => 'Cart deleted successfully'
-    ], 204);
+        'id' => $user->cart->id,
+        'quantity' => $user->cart->items->sum('quantity'),
+        'items' => $user->cart->items->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'quantity' => $item->quantity,
+                "unit_price" => $item->product->price,
+                ];
+            })
+        ], 200);
+    }
+
+    public function clearCart(Request $request)
+    {
+        $user = $request->user();
+        $user->cart->items()->delete();
+
+        return response()->json(['message' => 'Cart cleared successfully'
+        ]);
     }
 
 }

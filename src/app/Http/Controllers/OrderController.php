@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
@@ -61,6 +64,12 @@ class OrderController extends Controller
 
         foreach ($validated['items'] as $item) {
             $product = Product::findOrFail($item['product_id']);
+            
+            // 4. Verificação de estoque
+            if ($product->stock < $item['quantity']) {
+                throw new \Exception("Insufficient stock for product {$product->name}");
+            }
+
             $subtotal = $product->price * $item['quantity'];
             $totalAmount += $subtotal;
 
@@ -93,11 +102,17 @@ class OrderController extends Controller
             'address_id' => $orderData['address_id'],
             'order_date' => now(),
             'coupon_id' => $orderData['coupon_id'],
-            'status' => 'pending',
+            'status' => Order::STATUS_PENDING, // 6. Constante para status
             'totalAmount' => $orderData['totalAmount']
         ]);
 
         $order->items()->createMany($orderData['orderItems']);
+
+        // 5. Atualização de estoque
+        foreach ($orderData['orderItems'] as $item) {
+            Product::where('id', $item['product_id'])
+                  ->decrement('stock', $item['quantity']);
+        }
 
         return $order;
     }
