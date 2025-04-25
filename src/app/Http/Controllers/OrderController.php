@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Coupon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -56,6 +56,27 @@ class OrderController extends Controller
         ], 200);
     }
 
+    public function updateStatus(Request $request, $orderId)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,processing,shipped,delivered,completed,canceled'
+        ]);
+
+        $order = Order::findOrFail($orderId);
+
+        if (!in_array(Auth::user()->role, ['admin', 'moderator'])) {
+            return response()->json(['message' => 'Only admins and moderators can update order status'], 403);
+        }
+
+        $order->status = $request->status;
+        $order->save();
+
+        return response()->json([
+            'message' => 'Order status updated successfully',
+            'order' => $order
+        ]);
+    }
+
     protected function calculateOrderData(array $validated): array
     {
         $user = auth()->user();
@@ -64,8 +85,7 @@ class OrderController extends Controller
 
         foreach ($validated['items'] as $item) {
             $product = Product::findOrFail($item['product_id']);
-            
-            // 4. Verificação de estoque
+
             if ($product->stock < $item['quantity']) {
                 throw new \Exception("Insufficient stock for product {$product->name}");
             }
@@ -102,13 +122,12 @@ class OrderController extends Controller
             'address_id' => $orderData['address_id'],
             'order_date' => now(),
             'coupon_id' => $orderData['coupon_id'],
-            'status' => Order::STATUS_PENDING, // 6. Constante para status
+            'status' => 'pending',
             'totalAmount' => $orderData['totalAmount']
         ]);
 
         $order->items()->createMany($orderData['orderItems']);
 
-        // 5. Atualização de estoque
         foreach ($orderData['orderItems'] as $item) {
             Product::where('id', $item['product_id'])
                   ->decrement('stock', $item['quantity']);
