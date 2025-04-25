@@ -83,19 +83,19 @@ class OrderController extends Controller
         $totalAmount = 0;
         $orderItems = [];
 
-        foreach ($validated['items'] as $item) {
-            $product = Product::findOrFail($item['product_id']);
+        foreach ($user->cart->items as $item) {
+            $product = Product::findOrFail($item->product_id);
 
-            if ($product->stock < $item['quantity']) {
+            if ($product->stock < $item->quantity) {
                 throw new \Exception("Insufficient stock for product {$product->name}");
             }
 
-            $subtotal = $product->price * $item['quantity'];
+            $subtotal = $product->price * $item->quantity;
             $totalAmount += $subtotal;
 
             $orderItems[] = [
                 'product_id' => $product->id,
-                'quantity' => $item['quantity'],
+                'quantity' => $item->quantity,
                 'unit_price' => $product->price,
                 'subtotal' => $subtotal
             ];
