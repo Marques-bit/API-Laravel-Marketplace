@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function register(Request $request)
+    public function userRegister(Request $request)
     {
         $validateData = $request->validate([
             'name' => 'required',

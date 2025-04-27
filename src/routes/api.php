@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CartItemController;
+use App\Http\Controllers\CouponsController;
+use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
@@ -18,39 +23,35 @@ use Illuminate\Support\Facades\Route;
 |
 */
 Route::middleware('auth:sanctum')->group( function () {
-    Route::post('/order', [OrderController::class, 'createOrder']);
+    Route::delete('/orderDelete/{id}', [OrderController::class, 'orderDelete']);
     Route::get('/orderAll', [OrderController::class, 'allOrders']);
     Route::put('/orderUpdate/{id}', [OrderController::class, 'updateStatus']);
-    Route::delete('/orderDelete/{id}', [OrderController::class, 'orderDelete']);
+    Route::post('/order', [OrderController::class, 'createOrder']);
 
 
-    Route::post('/discountCreate', [DiscountsController::class, 'createDiscount']);
-    Route::get('/discountAll', [DiscountsController::class, 'allDiscounts']);
-    Route::put('/discountUpdate/{id}', [DiscountsController::class, 'updateDiscount']);
-    Route::delete('/discountDelete/{id}', [DiscountsController::class, 'deleteDiscount']);
-    Route::get('/discount/{id}', [DiscountsController::class, 'getDiscount']);
+    Route::delete('/discountDelete/{id}', [DiscountController::class, 'deleteDiscount']);
+    Route::get('/discountAll', [DiscountController::class, 'allDiscounts']);
+    Route::get('/discount/{id}', [DiscountController::class, 'getDiscount']);
+    Route::put('/discountUpdate/{id}', [DiscountController::class, 'updateDiscount']);
+    Route::post('/discountCreate', [DiscountController::class, 'createDiscount']);
 
 
-    Route::post('/couponCreate', [CouponsController::class, 'createCoupon']);
-    Route::get('/couponAll', [CouponsController::class, 'allCoupons']);
-    Route::put('/couponUpdate/{id}', [CouponsController::class, 'updateCoupon']);
     Route::delete('/couponDelete/{id}', [CouponsController::class, 'deleteCoupon']);
+    Route::get('/couponAll', [CouponsController::class, 'allCoupons']);
     Route::get('/coupon/{id}', [CouponsController::class, 'getCoupon']);
+    Route::put('/couponUpdate/{id}', [CouponsController::class, 'updateCoupon']);
+    Route::post('/couponCreate', [CouponsController::class, 'createCoupon']);
 
 
-    Route::post('/orderCreate', [OrderController::class, 'createOrder']);
-    Route::delete('/orderDelete/{id}', [OrderController::class, 'orderDelete']);
-    Route::put('/orderUpdate/{id}', [OrderController::class, 'updateStatus']);
-
-
-    Route::post('/cartItemAdd', [CartItemController::class, 'addItemToCart']);
-    Route::delete('/cartItemDelete/{productId}', [CartItemController::class, 'removeItemFromCart']);
     Route::delete('/cartItemDeleteAll', [CartItemController::class, 'removeAllItemsFromCart']);
+    Route::delete('/cartItemDelete/{productId}', [CartItemController::class, 'removeItemFromCart']);
     Route::get('/cartItemGet/{productId}', [CartItemController::class, 'getCartItem']);
+    Route::post('/cartItemAdd', [CartItemController::class, 'addItemToCart']);
 
-    Route::get('/cartUser', [CartController::class, 'getUserCart']);
-    Route::get('/cartGet', [CartController::class, 'getCart']);
+
     Route::delete('/cartDelete', [CartController::class, 'clearCart']);
+    Route::get('/cartGet', [CartController::class, 'getCart']);
+    Route::get('/cartUser', [CartController::class, 'getUserCart']);
 
 
     Route::delete('/productDelete/{id}', [ProductController::class, 'deleteProduct']);
@@ -64,18 +65,17 @@ Route::middleware('auth:sanctum')->group( function () {
     Route::get('/allCategories', [CategoryController::class, 'allCategories']);
     Route::get('/category/{id}', [CategoryController::class, 'getCategory']);
     Route::put('/categoryUpdate/{id}', [CategoryController::class, 'updateCategory']);
-    Route::post('categoryCreate', [CategoryController::class, 'createCategory']);
+    Route::post('/categoryCreate', [CategoryController::class, 'createCategory']);
 
 
     Route::delete('/userDelete', [UserController::class, 'deleteUser']);
     Route::delete('/addressDelete/{id}', [AddressController::class, 'addressDelete']);
+    Route::get('/addressUser/{id}', [AddressController::class, 'getAddress']);
     Route::put('/userUpdate/{id}', [UserController::class, 'update']);
     Route::put('/updatedAddress/{id}', [AddressController::class, 'addressUpdate']);
     Route::post('/userAddress', [AddressController::class, 'createAddress']);
 });
 
-
-Route::get('/addressUser/{id}', [AddressController::class, 'getAddress']);
 Route::post('/login', [UserController::class, 'authenticate']);
-Route::post('/register', [UserController::class, 'register']);
+Route::post('/register', [UserController::class, 'userRegister']);
 

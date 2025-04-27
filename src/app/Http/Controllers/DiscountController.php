@@ -6,7 +6,7 @@ use App\Models\Discount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class DiscountsController extends Controller
+class DiscountController extends Controller
 {
     public function __construct()
     {
@@ -28,10 +28,9 @@ class DiscountsController extends Controller
         $validateData = $request->validate([
             'product_id' => 'required|integer',
             'start_date' => 'required|date',
-            'end_date' => 'required|date',
-            'discount' => 'required|numeric',
+            'end_date' => 'required|after_or_equal:start_date',
+            'discount' => 'required|numeric|min:0|max:100',
         ]);
-
         $discount = Discount::create($validateData);
 
         return response()->json(['message' => 'Discount created successfully', 'discount' => $discount], 201);
@@ -40,17 +39,17 @@ class DiscountsController extends Controller
     public function updateDiscount(Request $request, $id)
     {
         $validateData = $request->validate([
-            'product_id' => 'required|integer',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date',
-            'discount' => 'required|numeric',
+            'product_id' => 'sometimes|integer',
+            'start_date' => 'sometimes|date',
+            'end_date' => 'sometimes|date|after_or_equal:start_date',
+            'discount' => 'sometimes|numeric|min:0|max:100',
         ]);
-
         $discount = Discount::findOrFail($id);
         $discount->update($validateData);
 
         return response()->json(['message' => 'Discount updated successfully', 'discount' => $discount], 200);
     }
+
 
     public function deleteDiscount(Request $request, $id)
     {

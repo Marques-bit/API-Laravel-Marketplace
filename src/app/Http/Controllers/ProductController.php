@@ -55,15 +55,14 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         $validateData = $request->validate([
-            'name' => 'required|string|max:255|unique:products,name,'.$id,
+            'name' => 'sometimes|string|max:255|unique:products,name,'.$id,
             'description' => 'sometimes|string|max:255',
-            'price' => 'required|decimal:10,2',
+            'price' => 'sometimes|decimal:10,2',
             'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'category_id' => 'required|numeric',
+            'category_id' => 'sometimes|exists:categories,id',
             'stock' => 'sometimes|integer',
         ]);
 
-        // Atualiza a imagem se fornecida
         if ($request->hasFile('image')) {
             if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
