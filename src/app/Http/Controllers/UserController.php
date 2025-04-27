@@ -29,7 +29,7 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
-        
+
         $user = Cart::create([
             'user_id' => $user->id
         ]);
@@ -67,8 +67,8 @@ class UserController extends Controller
         $user = Auth::user();
 
         $validateData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,'.$user->id,
+            'name' => 'sometimes|string|max:255|unique:users,name,'.$user->id,
+            'email' => 'sometimes|email|max:255|unique:users,email,'.$user->id,
             'password' => 'sometimes|required|min:6|string|confirmed',
         ]);
 
