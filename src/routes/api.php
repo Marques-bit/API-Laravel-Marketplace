@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CartItemController;
-use App\Http\Controllers\CouponsController;
+use App\Http\Controllers\CouponController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AddressController;
@@ -36,11 +36,11 @@ Route::middleware('auth:sanctum')->group( function () {
     Route::post('/discountCreate', [DiscountController::class, 'createDiscount']);
 
 
-    Route::delete('/couponDelete/{id}', [CouponsController::class, 'deleteCoupon']);
-    Route::get('/couponAll', [CouponsController::class, 'allCoupons']);
-    Route::get('/coupon/{id}', [CouponsController::class, 'getCoupon']);
-    Route::put('/couponUpdate/{id}', [CouponsController::class, 'updateCoupon']);
-    Route::post('/couponCreate', [CouponsController::class, 'createCoupon']);
+    Route::delete('/couponDelete/{id}', [CouponController::class, 'deleteCoupon']);
+    Route::get('/couponAll', [CouponController::class, 'allCoupons']);
+    Route::get('/coupon/{id}', [CouponController::class, 'getCoupon']);
+    Route::put('/couponUpdate/{id}', [CouponController::class, 'updateCoupon']);
+    Route::post('/couponCreate', [CouponController::class, 'createCoupon']);
 
 
     Route::delete('/cartItemDeleteAll', [CartItemController::class, 'removeAllItemsFromCart']);

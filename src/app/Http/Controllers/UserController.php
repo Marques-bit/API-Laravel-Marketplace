@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -15,22 +16,29 @@ class UserController extends Controller
         $validateData = $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             'password' => 'required|min:6|string',
             'password_confirm' => 'required|string',
 
         ]);
+        
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('users', 'public');
+            $validateData['image'] = $imagePath;
+        }
 
         if ($request->password != $request->password_confirm){
             return response()->json(['message' => 'Inconrrect Password!'],400);
         }
-
+        
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'image' => $validateData['image'], 
             'password' => Hash::make($request->password),
         ]);
 
-        $user = Cart::create([
+        $cart = Cart::create([
             'user_id' => $user->id
         ]);
 
@@ -70,7 +78,17 @@ class UserController extends Controller
             'name' => 'sometimes|string|max:255|unique:users,name,'.$user->id,
             'email' => 'sometimes|email|max:255|unique:users,email,'.$user->id,
             'password' => 'sometimes|required|min:6|string|confirmed',
+            'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        if ($request->hasFile('image')) {
+            if ($user->image && Storage::disk('public')->exists($user->image)) {
+                Storage::disk('public')->delete($user->image);
+            }
+
+            $imagePath = $request->file('image')->store('users', 'public');
+            $validateData['image'] = $imagePath;
+        }
 
         if ($request->has('name')) {
             $user->name = $validateData['name'];
@@ -82,6 +100,10 @@ class UserController extends Controller
 
         if ($request->has('password')) {
             $user->password = Hash::make($validateData['password']);
+        }
+
+        if ($request->has('image')) {
+            $user->image_url = $validateData['image'];
         }
 
         $user->save();
