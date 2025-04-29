@@ -16,9 +16,12 @@ class CartItemController extends Controller
         return $user->cart()->firstOrFail();
     }
 
-    protected function getCartItem(Cart $cart, $productId)
+    protected function getCartItem($productId)
     {
-        return $cart->cartItems()->where('product_id', $productId)->first();
+        $user = Auth::user()->id;
+        $cart = Cart::where('user_id', $user);
+        $cartItem = CartItem::where('product_id', $productId)->firstOrFail();
+        return $cartItem;
     }
 
     public function addItemToCart(Request $request)
