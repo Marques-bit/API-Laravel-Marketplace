@@ -14,11 +14,10 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('cart_id')->constrained()->onDelete('cascade');
+            $table->foreignId('address_id')->constrained()->onDelete('cascade');
             $table->foreignId('coupon_id')->nullable()->constrained()->onDelete('cascade');
             $table->enum('status', ['pending', 'processing', 'underway', 'completed', 'cancelled'])->default('pending');
-            $table->decimal('total', 10, 2);
-            $table->string('payment_method');
+            $table->decimal('totalAmount', 10, 2)->nullable();
             $table->timestamps();
         });
     }

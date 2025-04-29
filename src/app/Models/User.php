@@ -24,6 +24,11 @@ class User extends Authenticatable
         'role',
     ];
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+    
     public function address()
     {
         return $this->hasMany(Address::class);

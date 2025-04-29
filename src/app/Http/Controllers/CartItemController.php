@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Auth;
 use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -21,9 +23,9 @@ class CartItemController extends Controller
 
     public function addItemToCart(Request $request)
     {
-        $user = $request->user();
-        $cart = $user->cart()->firstOrCreate();
-        
+        $user = Auth::user()->id;
+        $cart = Cart::where('user_id', $user)->firstOrCreate();
+
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1'
@@ -32,7 +34,7 @@ class CartItemController extends Controller
         $cart->items()->create([
             'product_id' => $validated['product_id'],
             'quantity' => $validated['quantity'],
-            'unit_price' => Product::find($validated['product_id'])->price
+            'price' => Product::find($validated['product_id'])->price
         ]);
 
         return response()->json([

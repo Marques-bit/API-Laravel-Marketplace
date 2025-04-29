@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     use HasFactory;
-    
+
     const STATUS_PENDING = 'pending';
     const STATUS_PROCESSING = 'processing';
     const STATUS_COMPLETED = 'completed';
@@ -17,7 +17,6 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'address_id',
-        'order_date',
         'coupon_id',
         'status',
         'totalAmount',

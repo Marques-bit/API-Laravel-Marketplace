@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Discount;
+use App\Models\OrderItem;
+use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Coupon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -30,20 +34,60 @@ class OrderController extends Controller
     public function createOrder(Request $request)
     {
         $validated = $request->validate([
-            'address_id' => 'required|exists:addresses,id',
+            'address_id' => 'required|exists:addresses,id|unique:orders',
             'coupon_id' => 'nullable|exists:coupons,id',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1'
         ]);
 
-        $orderData = $this->calculateOrderData($validated);
-        $order = $this->createOrderRecord($orderData);
+        $validated['user_id'] = auth()->user()->id;
+        $user = User::findOrFail($validated['user_id']);
 
-        return response()->json([
-            'message' => 'Order created successfully',
-            'order' => $order->load(['items.product', 'address', 'coupon'])
-        ], 201);
+        $cartItems = $user->cart->items;
+        $totalAmount = 0;
+
+        DB::beginTransaction();
+        try {
+            $order = Order::create($validated);
+
+            foreach ($cartItems as $item) {
+                $product = Product::findOrFail($item->product_id);
+
+                if ($product->stock < $item->quantity) {
+                    throw new \Exception("Insufficient stock for product {$product->name}");
+                }
+
+                $productPrice = $this->productDiscount($item->product_id, $item->price);
+                $totalAmount += $productPrice * $item->quantity;
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                    'price' => $productPrice,
+                ]);
+
+                $product->decrement('stock', $item->quantity);
+            }
+
+            if ($validated['coupon_id']) {
+                $totalAmount = $this->applyCoupon($totalAmount, $validated['coupon_id']);
+            }
+
+            Order::where('id', $order->id)->update([
+                'totalAmount' => $totalAmount
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Order created successfully',
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Order creation failed',
+                'error' => $e->getMessage()
+            ], 400);
+        }
     }
 
     public function orderDelete($id)
@@ -77,62 +121,26 @@ class OrderController extends Controller
         ]);
     }
 
-    protected function calculateOrderData(array $validated): array
+    public function applyCoupon($totalAmount, $coupon_id)
     {
-        $user = auth()->user();
-        $totalAmount = 0;
-        $orderItems = [];
-
-        foreach ($user->cart->items as $item) {
-            $product = Product::findOrFail($item->product_id);
-
-            if ($product->stock < $item->quantity) {
-                throw new \Exception("Insufficient stock for product {$product->name}");
-            }
-
-            $subtotal = $product->price * $item->quantity;
-            $totalAmount += $subtotal;
-
-            $orderItems[] = [
-                'product_id' => $product->id,
-                'quantity' => $item->quantity,
-                'unit_price' => $product->price,
-                'subtotal' => $subtotal
-            ];
-        }
-
-        if (!empty($validated['coupon_id'])) {
-            $coupon = Coupon::findOrFail($validated['coupon_id']);
-            $totalAmount = $coupon->applyDiscount($totalAmount);
-        }
-
-        return [
-            'user_id' => $user->id,
-            'address_id' => $validated['address_id'],
-            'coupon_id' => $validated['coupon_id'] ?? null,
-            'totalAmount' => $totalAmount,
-            'orderItems' => $orderItems
-        ];
+        $coupon = Coupon::findOrFail($coupon_id);
+        $discountAmount = ($totalAmount * $coupon->discount) / 100;
+        $totalAmount -= $discountAmount;
+        return $totalAmount;
     }
 
-    protected function createOrderRecord(array $orderData)
+    public function productDiscount($productId, $originalPrice)
     {
-        $order = auth()->user()->orders()->create([
-            'user_id' => $orderData['user_id'],
-            'address_id' => $orderData['address_id'],
-            'order_date' => now(),
-            'coupon_id' => $orderData['coupon_id'],
-            'status' => 'pending',
-            'totalAmount' => $orderData['totalAmount']
-        ]);
+        $totalDiscount = Discount::where('product_id', $productId)
+                           ->sum('discount');
 
-        $order->items()->createMany($orderData['orderItems']);
+        $totalDiscount = min($totalDiscount, 100);
 
-        foreach ($orderData['orderItems'] as $item) {
-            Product::where('id', $item['product_id'])
-                  ->decrement('stock', $item['quantity']);
+
+        if ($totalDiscount > 0) {
+            return $originalPrice * (1 - ($totalDiscount / 100));
         }
 
-        return $order;
+        return $originalPrice;
     }
 }

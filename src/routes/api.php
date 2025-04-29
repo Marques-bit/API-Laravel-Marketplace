@@ -24,7 +24,6 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware('auth:sanctum')->group( function () {
     Route::delete('/orderDelete/{id}', [OrderController::class, 'orderDelete']);
-    Route::get('/orderAll', [OrderController::class, 'allOrders']);
     Route::put('/orderUpdate/{id}', [OrderController::class, 'updateStatus']);
     Route::post('/order', [OrderController::class, 'createOrder']);
 
@@ -51,7 +50,6 @@ Route::middleware('auth:sanctum')->group( function () {
 
     Route::delete('/cartDelete', [CartController::class, 'clearCart']);
     Route::get('/cartGet', [CartController::class, 'getCart']);
-    Route::get('/cartUser', [CartController::class, 'getUserCart']);
 
 
     Route::delete('/productDelete/{id}', [ProductController::class, 'deleteProduct']);
